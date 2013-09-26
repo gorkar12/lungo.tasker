@@ -11,7 +11,7 @@ class __View.Task extends Monocle.View
   constructor: ->
     super
     @append @model
-    __Model.Task.bind "save", @bindTaskSaved
+    __Model.Task.bind "update", @bindTaskSaved
 
   events:
     "swipeLeft li"  :  "onDelete"
@@ -22,12 +22,12 @@ class __View.Task extends Monocle.View
     "input.toggle"             : "toggle"
 
   bindTaskSaved: (task) =>
-    console.log task
     if task.uid is @model.uid
       @refresh()
 
   onDone: (event) ->
     @model.updateAttributes done: !@model.done
+    __Controller.TasksCtrl.updateImportantCount()
     @refresh()
     console.log @model
 

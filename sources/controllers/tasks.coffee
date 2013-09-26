@@ -18,6 +18,7 @@ class __Controller.TasksCtrl extends Monocle.Controller
       __Controller.Task.new()
 
     bindTaskCreated: (task) =>
+      console.log 1
       context = if task.important is true then "high" else "normal"
       new __View.Task model: task, container: "article##{context} ul"
       Lungo.Router.back()
@@ -30,8 +31,9 @@ class __Controller.TasksCtrl extends Monocle.Controller
       @updateImportantCount()
 
     updateImportantCount: ->
-      Lungo.Element.count("#important", __Model.Task.important().length)
-      Lungo.Element.count("#importantnav", __Model.Task.important().length)
+      console.log __Model.Task.counter()
+      Lungo.Element.count("#important", __Model.Task.counter().length)
+      Lungo.Element.count("#importantnav", __Model.Task.counter().length)
 
 $$ ->
   Lungo.init({})

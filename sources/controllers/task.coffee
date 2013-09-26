@@ -17,15 +17,13 @@ class TaskCtrl extends Monocle.Controller
 
   # Events
   onSave: (event) ->
-    if @current
+    if @current 
       @current.updateAttributes
         name        : @name.val(),
         description : @description.val(),
         list        : @list.val(),
         when        : @when.val(),
         important   : @important[0].checked
-      # Save
-      @
     else
       # New task
       Lungo.Notification.show()
@@ -40,9 +38,9 @@ class TaskCtrl extends Monocle.Controller
   _new: (@current=null) ->
     @name.val ""
     @description.val ""
-    @list.val "office"
-    @when.val
-    @important.val ""
+    @list.attr "office"
+    @when.val ""
+    @important.val false
     Lungo.Router.section "task"
 
   _show: (@current) ->

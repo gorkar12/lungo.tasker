@@ -31,6 +31,12 @@
       });
     };
 
+    Task.counter = function() {
+      return this.select(function(task) {
+        return task.important && !task.done;
+      });
+    };
+
     Task.prototype.style = function() {
       if (this.done) {
         return "accept";
@@ -59,7 +65,7 @@
       this.bindTaskSaved = __bind(this.bindTaskSaved, this);
       Task.__super__.constructor.apply(this, arguments);
       this.append(this.model);
-      __Model.Task.bind("save", this.bindTaskSaved);
+      __Model.Task.bind("update", this.bindTaskSaved);
     }
 
     Task.prototype.events = {
@@ -73,7 +79,6 @@
     };
 
     Task.prototype.bindTaskSaved = function(task) {
-      console.log(task);
       if (task.uid === this.model.uid) {
         return this.refresh();
       }
@@ -83,6 +88,7 @@
       this.model.updateAttributes({
         done: !this.model.done
       });
+      __Controller.TasksCtrl.updateImportantCount();
       this.refresh();
       return console.log(this.model);
     };
@@ -149,14 +155,13 @@
 
     TaskCtrl.prototype.onSave = function(event) {
       if (this.current) {
-        this.current.updateAttributes({
+        return this.current.updateAttributes({
           name: this.name.val(),
           description: this.description.val(),
           list: this.list.val(),
           when: this.when.val(),
           important: this.important[0].checked
         });
-        return this;
       } else {
         Lungo.Notification.show();
         return __Model.Task.create({
@@ -173,9 +178,9 @@
       this.current = current != null ? current : null;
       this.name.val("");
       this.description.val("");
-      this.list.val("office");
-      this.when.val;
-      this.important.val("");
+      this.list.attr("office");
+      this.when.val("");
+      this.important.val(false);
       return Lungo.Router.section("task");
     };
 
@@ -232,6 +237,7 @@
 
     TasksCtrl.prototype.bindTaskCreated = function(task) {
       var context;
+      console.log(1);
       context = task.important === true ? "high" : "normal";
       new __View.Task({
         model: task,
@@ -249,8 +255,9 @@
     };
 
     TasksCtrl.prototype.updateImportantCount = function() {
-      Lungo.Element.count("#important", __Model.Task.important().length);
-      return Lungo.Element.count("#importantnav", __Model.Task.important().length);
+      console.log(__Model.Task.counter());
+      Lungo.Element.count("#important", __Model.Task.counter().length);
+      return Lungo.Element.count("#importantnav", __Model.Task.counter().length);
     };
 
     return TasksCtrl;
