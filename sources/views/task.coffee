@@ -1,7 +1,7 @@
 class __View.Task extends Monocle.View
 
   template  : """
-    <li class={{style()}}>
+    <li class="{{style()}}">
       <div class="on-right">{{list}}</div>
       <strong>{{name}}</strong>
       <small>{{description}}</small>
@@ -11,7 +11,14 @@ class __View.Task extends Monocle.View
   constructor: ->
     super
     @append @model
-    __Model.Task.bind "update", @bindTaskSaved
+    __Model.Task.bind "update", @bindTaskUpdated
+
+
+  bindTaskUpdated: (task)  =>
+    if task.uid is @model.uid
+        @refresh()
+    
+
 
   events:
     "swipeLeft li"  :  "onDelete"
@@ -21,33 +28,33 @@ class __View.Task extends Monocle.View
   elements:
     "input.toggle"             : "toggle"
 
-  bindTaskSaved: (task) =>
-    if task.uid is @model.uid
-      @refresh()
-
   onDone: (event) ->
+    console.log "[DONE]", @model
     @model.updateAttributes done: !@model.done
-    __Controller.TasksCtrl.updateImportantCount()
     @refresh()
-    console.log @model
 
   onDelete: (event) ->
     Lungo.Notification.confirm
-      icon: "user"
-      title: "Title of confirm."
-      description: "Description of confirm."
+      icon: "remove-sign"
+      title: "Delete."
+      description: "¿Are you sure?"
       accept:
         icon: "checkmark"
         label: "Accept"
         callback: =>
           @model.destroy()
-          @remove()
+          @remove() 
+          @refresh()
+          console.log "[DELETE]", @model
+
       cancel:
         icon: "close"
         label: "Cancel"
         callback: ->
-          console.log "Canceled"
-        
+          console.log "Task is not deleted!"
+
+
+
 
   onView: (event) ->
     __Controller.Task.show @model

@@ -3,8 +3,8 @@ class TaskCtrl extends Monocle.Controller
   elements:
     "input[name=name]"          : "name"
     "textarea[name=description]": "description"
-    "input[name=list]"          : "list"
-    "select[name=when]"         : "when"
+    "select[name=list]"          : "list"
+    "input[name=when]"         : "when"
     "input[name=important]"     : "important"
 
   events:
@@ -18,12 +18,14 @@ class TaskCtrl extends Monocle.Controller
   # Events
   onSave: (event) ->
     if @current 
-      @current.updateAttributes
+      # Save
+      @current.updateAttributes 
         name        : @name.val(),
         description : @description.val(),
         list        : @list.val(),
         when        : @when.val(),
         important   : @important[0].checked
+
     else
       # New task
       Lungo.Notification.show()
@@ -38,9 +40,8 @@ class TaskCtrl extends Monocle.Controller
   _new: (@current=null) ->
     @name.val ""
     @description.val ""
-    @list.attr "office"
+    @list.val "office"
     @when.val ""
-    @important.val false
     Lungo.Router.section "task"
 
   _show: (@current) ->
@@ -48,7 +49,7 @@ class TaskCtrl extends Monocle.Controller
     @description.val @current.description
     @list.val @current.list
     @when.val @current.when
-    @important.val @current.important
+
 
     Lungo.Router.section "task"
 

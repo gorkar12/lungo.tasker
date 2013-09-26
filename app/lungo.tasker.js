@@ -27,12 +27,6 @@
 
     Task.important = function() {
       return this.select(function(task) {
-        return task.important === true;
-      });
-    };
-
-    Task.counter = function() {
-      return this.select(function(task) {
         return task.important && !task.done;
       });
     };
@@ -59,14 +53,20 @@
   __View.Task = (function(_super) {
     __extends(Task, _super);
 
-    Task.prototype.template = "<li class={{style()}}>\n  <div class=\"on-right\">{{list}}</div>\n  <strong>{{name}}</strong>\n  <small>{{description}}</small>\n</li>";
+    Task.prototype.template = "<li class=\"{{style()}}\">\n  <div class=\"on-right\">{{list}}</div>\n  <strong>{{name}}</strong>\n  <small>{{description}}</small>\n</li>";
 
     function Task() {
-      this.bindTaskSaved = __bind(this.bindTaskSaved, this);
+      this.bindTaskUpdated = __bind(this.bindTaskUpdated, this);
       Task.__super__.constructor.apply(this, arguments);
       this.append(this.model);
-      __Model.Task.bind("update", this.bindTaskSaved);
+      __Model.Task.bind("update", this.bindTaskUpdated);
     }
+
+    Task.prototype.bindTaskUpdated = function(task) {
+      if (task.uid === this.model.uid) {
+        return this.refresh();
+      }
+    };
 
     Task.prototype.events = {
       "swipeLeft li": "onDelete",
@@ -78,40 +78,35 @@
       "input.toggle": "toggle"
     };
 
-    Task.prototype.bindTaskSaved = function(task) {
-      if (task.uid === this.model.uid) {
-        return this.refresh();
-      }
-    };
-
     Task.prototype.onDone = function(event) {
+      console.log("[DONE]", this.model);
       this.model.updateAttributes({
         done: !this.model.done
       });
-      __Controller.TasksCtrl.updateImportantCount();
-      this.refresh();
-      return console.log(this.model);
+      return this.refresh();
     };
 
     Task.prototype.onDelete = function(event) {
       var _this = this;
       return Lungo.Notification.confirm({
-        icon: "user",
-        title: "Title of confirm.",
-        description: "Description of confirm.",
+        icon: "remove-sign",
+        title: "Delete.",
+        description: "¿Are you sure?",
         accept: {
           icon: "checkmark",
           label: "Accept",
           callback: function() {
             _this.model.destroy();
-            return _this.remove();
+            _this.remove();
+            _this.refresh();
+            return console.log("[DELETE]", _this.model);
           }
         },
         cancel: {
           icon: "close",
           label: "Cancel",
           callback: function() {
-            return console.log("Canceled");
+            return console.log("Task is not deleted!");
           }
         }
       });
@@ -138,8 +133,8 @@
     TaskCtrl.prototype.elements = {
       "input[name=name]": "name",
       "textarea[name=description]": "description",
-      "input[name=list]": "list",
-      "select[name=when]": "when",
+      "select[name=list]": "list",
+      "input[name=when]": "when",
       "input[name=important]": "important"
     };
 
@@ -178,9 +173,8 @@
       this.current = current != null ? current : null;
       this.name.val("");
       this.description.val("");
-      this.list.attr("office");
+      this.list.val("office");
       this.when.val("");
-      this.important.val(false);
       return Lungo.Router.section("task");
     };
 
@@ -190,7 +184,6 @@
       this.description.val(this.current.description);
       this.list.val(this.current.list);
       this.when.val(this.current.when);
-      this.important.val(this.current.important);
       return Lungo.Router.section("task");
     };
 
@@ -223,21 +216,31 @@
     };
 
     function TasksCtrl() {
-      this.bindTaskUpdated = __bind(this.bindTaskUpdated, this);
       this.bindTaskCreated = __bind(this.bindTaskCreated, this);
+      this.bindTaskUpdated = __bind(this.bindTaskUpdated, this);
       TasksCtrl.__super__.constructor.apply(this, arguments);
       __Model.Task.bind("create", this.bindTaskCreated);
-      __Model.Task.bind("destroy", this.updateImportantCount);
+      __Model.Task.bind("destroy", this.updateCount);
       __Model.Task.bind("update", this.bindTaskUpdated);
     }
+
+    TasksCtrl.prototype.bindTaskUpdated = function(task) {
+      Lungo.Router.back();
+      Lungo.Notification.hide();
+      return this.updateCount();
+    };
 
     TasksCtrl.prototype.onNew = function(event) {
       return __Controller.Task["new"]();
     };
 
+    TasksCtrl.prototype.updateCount = function() {
+      Lungo.Element.count("#important", __Model.Task.important().length);
+      return Lungo.Element.count("#importantnav", __Model.Task.important().length);
+    };
+
     TasksCtrl.prototype.bindTaskCreated = function(task) {
       var context;
-      console.log(1);
       context = task.important === true ? "high" : "normal";
       new __View.Task({
         model: task,
@@ -245,19 +248,7 @@
       });
       Lungo.Router.back();
       Lungo.Notification.hide();
-      return this.updateImportantCount();
-    };
-
-    TasksCtrl.prototype.bindTaskUpdated = function(task) {
-      Lungo.Router.back();
-      Lungo.Notification.hide();
-      return this.updateImportantCount();
-    };
-
-    TasksCtrl.prototype.updateImportantCount = function() {
-      console.log(__Model.Task.counter());
-      Lungo.Element.count("#important", __Model.Task.counter().length);
-      return Lungo.Element.count("#importantnav", __Model.Task.counter().length);
+      return this.updateCount();
     };
 
     return TasksCtrl;
@@ -267,8 +258,7 @@
   $$(function() {
     var Tasks;
     Lungo.init({});
-    Tasks = new __Controller.TasksCtrl("section#tasks");
-    return Tasks.updateImportantCount();
+    return Tasks = new __Controller.TasksCtrl("section#tasks");
   });
 
 }).call(this);
